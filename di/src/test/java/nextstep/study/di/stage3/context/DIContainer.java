@@ -40,29 +40,31 @@ class DIContainer {
     }
 
     private Set<Object> toInjectedBeans(final Set<Object> beanInstances) {
-        for (final Object beanInstance : beanInstances) {
-            log.info("Inject to {}", beanInstance.getClass());
-            final Field[] fields = beanInstance.getClass()
-                    .getDeclaredFields();
-            for (final Field field : fields) {
-                getInjectableBean(beanInstances, field)
-                        .ifPresent(it -> injectBeanToField(beanInstance, field, it));
-            }
-            beanInstances.add(beanInstance);
-        }
-        return beanInstances;
+        return beanInstances.stream()
+                .map(it -> toInjectedBean(beanInstances, it))
+                .collect(Collectors.toSet());
     }
 
-    private Optional<Object> getInjectableBean(final Set<Object> beanInstances, final Field field) {
+    private Object toInjectedBean(final Set<Object> beanInstances, final Object beanInstance) {
+        final Field[] fields = beanInstance.getClass()
+                .getDeclaredFields();
+        for (final Field field : fields) {
+            final Optional<Object> injectableBean = findInjectableBean(beanInstances, field);
+            injectableBean.ifPresent(it -> injectBeanToField(beanInstance, field, it));
+        }
+        return beanInstance;
+    }
+
+    private Optional<Object> findInjectableBean(final Set<Object> beanInstances, final Field field) {
         return beanInstances.stream()
                 .filter(it -> field.getType().isInstance(it))
                 .findFirst();
     }
 
-    private void injectBeanToField(final Object injectTarget, final Field field, final Object bean) {
+    private void injectBeanToField(final Object beanInstance, final Field field, final Object fieldValueBean) {
         try {
             field.setAccessible(true);
-            field.set(injectTarget, bean);
+            field.set(beanInstance, fieldValueBean);
         } catch (final Exception e) {
             log.warn("빈 의존성 주입 실패 {}", e);
         }

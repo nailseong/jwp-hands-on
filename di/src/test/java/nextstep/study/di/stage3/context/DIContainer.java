@@ -70,6 +70,9 @@ class DIContainer {
 
     @SuppressWarnings("unchecked")
     public <T> T getBean(final Class<T> aClass) {
-        return null;
+        return (T) beans.stream()
+                .filter(aClass::isInstance)
+                .findFirst()
+                .orElseThrow();
     }
 }

@@ -27,7 +27,6 @@ public class TransactionHandler implements InvocationHandler {
         final Method declaredMethod = target.getClass()
                 .getDeclaredMethod(method.getName(), method.getParameterTypes());
         if (declaredMethod.isAnnotationPresent(Transactional.class)) {
-            // TODO: 2022/10/22 invoke
             return invokeWithTransaction(method, args);
         }
         return method.invoke(target, args);
